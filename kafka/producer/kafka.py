@@ -1,16 +1,16 @@
 from __future__ import absolute_import
 
-import atexit
 import copy
 import logging
 import threading
 import time
 
+from .. import errors as Errors
+from ..util import try_method_on_system_exit
 from ..client_async import KafkaClient
-from ..structs import TopicPartition
 from ..partitioner.default import DefaultPartitioner
 from ..protocol.message import Message, MessageSet
-from .. import errors as Errors
+from ..structs import TopicPartition
 from .future import FutureRecordMetadata, FutureProduceResult
 from .record_accumulator import AtomicInteger, RecordAccumulator
 from .sender import Sender
@@ -293,7 +293,8 @@ class KafkaProducer(object):
         self._sender.daemon = True
         self._sender.start()
         self._closed = False
-        atexit.register(self.close, timeout=0)
+
+        try_method_on_system_exit(self, 'close', timeout=0)
         log.debug("Kafka producer started")
 
     def __del__(self):
