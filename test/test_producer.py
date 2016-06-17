@@ -1,4 +1,5 @@
 import sys
+import threading
 
 import pytest
 
@@ -64,3 +65,11 @@ def test_end_to_end(kafka_broker, compression):
             break
 
     assert msgs == set(['msg %d' % i for i in range(messages)])
+
+
+def test_kafka_producer_gc_cleanup():
+    threads = threading.active_count()
+    producer = KafkaProducer(api_version='0.9') # set api_version explicitly to avoid auto-detection
+    assert threading.active_count() == threads + 1
+    del(producer)
+    assert threading.active_count() == threads
